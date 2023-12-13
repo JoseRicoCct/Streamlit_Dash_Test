@@ -1,130 +1,82 @@
-import json
+import streamlit as st
 import pandas as pd
-import plotly.express as px  # (version 4.7.0)
-import plotly.graph_objects as go
+import base64
+import matplotlib.pyplot as plt
+import numpy as np
+import yfinance as yf
 
-import dash
-from dash import dcc
-from dash import html
-from dash.dependencies import Input, Output, State
+st.title('S&P 500 App')
 
-df = pd.read_csv("clean_df.csv", index_col=0)
+st.markdown("""
+This app retrieves the list of the **S&P 500** (from Wikipedia) and its corresponding **stock closing price** (year-to-date)!
+* **Python libraries:** base64, pandas, streamlit, yfinance, numpy, matplotlib
+* **Data source:** [Wikipedia](https://en.wikipedia.org/wiki/List_of_S%26P_500_companies).
+""")
 
-colors = {
-    'background': '#111111',
-    'text': '#C5DB5F'
-}
+st.sidebar.header('User Input Features')
 
-app = dash.Dash(__name__)
+# Web scraping of S&P 500 data
+#
+@st.cache
+def load_data():
+    url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
+    html = pd.read_html(url, header = 0)
+    df = html[0]
+    return df
 
-# ------------------------------------------------------------------------------
-# App layout
-app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
+df = load_data()
+sector = df.groupby('GICS Sector')
 
-    html.H1("UFO Sightings in the U.S.", style={'text-align': 'center', 'color': colors['text']}),
-    
-    html.Div([
-        html.Div([
-            dcc.Dropdown(id="slct_decade",
-                        options=[
-                            {"label": "1940-1950", "value": "1940-1950"},
-                            {"label": "1950-1960", "value": "1950-1960"},
-                            {"label": "1960-1970", "value": "1960-1970"},
-                            {"label": "1970-1980", "value": "1970-1980"},
-                            {"label": "1990-2000", "value": "1990-2000"},
-                            {"label": "2000-2010", "value": "2000-2010"},
-                            {"label": "2010-2014", "value": "2010-2014"}],
-                        multi=False,
-                        value="2010-2014", 
-                        style={'width': "50%"}
-                        ),
+# Sidebar - Sector selection
+sorted_sector_unique = sorted( df['GICS Sector'].unique() )
+selected_sector = st.sidebar.multiselect('Sector', sorted_sector_unique, sorted_sector_unique)
 
-            html.Div(id='output_container', style={'color': colors['text']}, children=[]),
-            html.Br(),
-        ], style={'width': '48%', 'display': 'inline-block'}),
-        
-        html.Div([
-            dcc.Dropdown(id="slct_chart",
-                        options=[
-                            {"label": "Average Encounter (seconds)", "value": "avg_encounter"},
-                            {"label": "UFO Sightings", "value": "sighting"}],
-                        multi=False,
-                        value="sighting",
-                        style={'width': "76"}
-                        ),
-            html.Br(),
-        ], style={'width': '49%', 'text-align': 'center', 'display': 'inline-block'})
-    ], style={
-        'padding': '10px 5px'
-    }),
-    html.Div([
-        dcc.Graph(id='my_ufo_map',
-        hoverData={'points': [{'customdata': ['TX', 0]}]}
-        )
-    ], style={'width': '49%', 'display': 'inline-block'}),
-    html.Div([
-        dcc.Graph(id='my_bar_chart'),
-    ], style={'display': 'inline-block', 'width': '49%'}),
-])
+# Filtering data
+df_selected_sector = df[ (df['GICS Sector'].isin(selected_sector)) ]
 
-# ------------------------------------------------------------------------------
-# Connect the Plotly graphs with Dash Components
-@app.callback(
-    [Output(component_id='output_container', component_property='children'),
-     Output(component_id='my_ufo_map', component_property='figure')],
-    [Input(component_id='slct_decade', component_property='value')]
-)
-def update_map(slct_decade):
+st.header('Display Companies in Selected Sector')
+st.write('Data Dimension: ' + str(df_selected_sector.shape[0]) + ' rows and ' + str(df_selected_sector.shape[1]) + ' columns.')
+st.dataframe(df_selected_sector)
 
-    container = "The decade chosen by user was: {}".format(slct_decade)
-    
-    dff = df.copy()
-    dff = dff.groupby(['decade', 'state']).count()[['sighting']]
-    dff.reset_index(inplace=True)
-    dff = dff[dff["decade"] == slct_decade]
+# Download S&P500 data
+# https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
+def filedownload(df):
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()  # strings <-> bytes conversions
+    href = f'<a href="data:file/csv;base64,{b64}" download="SP500.csv">Download CSV File</a>'
+    return href
 
-    # Plotly Express
-    fig = px.choropleth(
-        data_frame=dff,
-        locationmode='USA-states',
-        locations='state',
-        scope="usa",
-        color='sighting',
-        hover_data=['state', 'sighting'],
-        color_continuous_scale=px.colors.sequential.Blugrn,
-        labels={'sighting': 'UFO sightings'},
-        template='plotly_dark'
+st.markdown(filedownload(df_selected_sector), unsafe_allow_html=True)
+
+# https://pypi.org/project/yfinance/
+
+data = yf.download(
+        tickers = list(df_selected_sector[:10].Symbol),
+        period = "ytd",
+        interval = "1d",
+        group_by = 'ticker',
+        auto_adjust = True,
+        prepost = True,
+        threads = True,
+        proxy = None
     )
 
-    return container, fig
-    
-def create_chart(df_new, slct_chart, hoverData):
+# Plot Closing Price of Query Symbol
+def price_plot(symbol):
+  df = pd.DataFrame(data[symbol].Close)
+  df['Date'] = df.index
+  fig = plt.figure()
+  plt.fill_between(df.Date, df.Close, color='skyblue', alpha=0.3)
+  plt.plot(df.Date, df.Close, color='skyblue', alpha=0.8)
+  plt.xticks(rotation=90)
+  plt.title(symbol, fontweight='bold')
+  plt.xlabel('Date', fontweight='bold')
+  plt.ylabel('Closing Price', fontweight='bold')
+  return st.pyplot(fig)
 
-    df_new = df_new.groupby('decade').sum()
-    df_new.reset_index(inplace=True)
-    df_new['avg_encounter'] = df_new['duration (seconds)'] / df_new['sighting']
-    x = df_new['decade']
+num_company = st.sidebar.slider('Number of Companies', 1, 5)
 
-    fig = px.bar(df_new, x='decade', y=slct_chart, title=hoverData['points'][0]['customdata'][0], template='plotly_dark')
-
-    fig.update_layout(title={'xanchor':'center', 'yanchor': 'top', 'y':0.9,'x':0.5,})
-
-    return fig 
-
-@app.callback(
-    Output(component_id='my_bar_chart', component_property='figure'),
-    [Input(component_id='my_ufo_map', component_property='hoverData'),
-    Input(component_id='slct_chart', component_property='value')]
-)
-
-def update_chart(hoverData, slct_chart):
-    state_name = hoverData['points'][0]['customdata'][0]
-    df_new = df.copy()
-    df_new = df_new[df_new['state'] == state_name]
-    print(state_name)
-    return create_chart(df_new, slct_chart, hoverData)
-
-
-# ------------------------------------------------------------------------------
-if __name__ == '__main__':
-    app.run_server(debug=True)
+if st.button('Show Plots'):
+    st.header('Stock Closing Price')
+    for i in list(df_selected_sector.Symbol)[:num_company]:
+        price_plot(i)
