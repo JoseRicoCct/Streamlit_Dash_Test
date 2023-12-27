@@ -18,7 +18,7 @@ fig_supervised = px.bar(
     title='Supervised Learning'
 )
 
-# Your data for GridSearchCV Feature Reduction
+# Your data for Feature Reduction and GridSearchCV
 data_feature_reduction = pd.DataFrame({
     'Country_Vehicle': ['IE_CAR', 'IE_BUS', 'IE_TRN'],
     'Number_of_Features': [4, 2, 2],
@@ -27,13 +27,13 @@ data_feature_reduction = pd.DataFrame({
     'Accuracy_Enriched (%)': [98.67, 81.54, 89.59]
 })
 
-# Bar chart for GridSearchCV Feature Reduction
+# Bar chart for Feature Reduction and GridSearchCV
 fig_feature_reduction = px.bar(
     data_feature_reduction,
     x='Country_Vehicle',  # Use 'Country_Vehicle' as the x-axis
     y=['Number_of_Features', 'Number_of_Features_Enriched', 'Accuracy (%)', 'Accuracy_Enriched (%)'],
     barmode='group',
-     title='GridSearchCV Feature Reduction'
+    title='Feature Reduction and GridSearchCV'
 )
 
 # Your data for Unsupervised Learning
@@ -52,34 +52,19 @@ fig_unsupervised = px.bar(
     title='Unsupervised Learning'
 )
 
-# Your DataFrame
-data_pca = pd.DataFrame({
-    'Vehicle': ['CAR', 'BUS', 'TRN'],
-    'PCA': [
-        [0.77171509, 0.16514322, 0.02878059],
-        [0.52207334, 0.2149303, 0.09974296],
-        [0.44371637, 0.33012741, 0.07419443]
-    ],
-    'PCA Enriched': [
-        [0.97747751, 0.0174295, 0.00246979],
-        [0.97557712, 0.01888167, 0.00272318],
-        [0.76860845, 0.16637195, 0.02241525]
-    ]
-})
-
-# Reshape the DataFrame for the table
-data_pca_long = pd.melt(data_pca, id_vars=['Vehicle'], var_name='Method', value_name='Values')
-
-# Convert the 'Values' column to strings for display in DataTable
-data_pca_long['Values'] = data_pca_long['Values'].apply(lambda x: ', '.join(map(str, x)))
+# Dropdown options
+options = ['Supervised Learning', 'Unsupervised Learning', 'Feature Reduction and GridSearchCV']
 
 # Streamlit app
-st.title("PCA and PCA Enriched Values")
+st.title("Graph Selector")
 
-# Display the DataTable
-st.dataframe(data_pca_long)
+# Dropdown for selecting the graph
+selected_graph = st.selectbox("Select Graph", options)
 
-# Display the plots
-st.plotly_chart(fig_supervised)
-st.plotly_chart(fig_feature_reduction)
-st.plotly_chart(fig_unsupervised)
+# Display the selected graph
+if selected_graph == 'Supervised Learning':
+    st.plotly_chart(fig_supervised)
+elif selected_graph == 'Unsupervised Learning':
+    st.plotly_chart(fig_unsupervised)
+elif selected_graph == 'Feature Reduction and GridSearchCV':
+    st.plotly_chart(fig_feature_reduction)
