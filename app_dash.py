@@ -96,19 +96,21 @@ selected_value = st.selectbox("Select Figure", [
     'Unsupervised Learning Silhouette Score',
     'Unsupervised Learning PCA Variance',
     'Sentiment Analysis'
-])
+], key="selectbox_key")
 
-# Apply custom styling to make the select box smaller
+# Center the dropdown
 st.markdown(
-    "<style>div[data-baseweb='select'] {max-width: 200px;}</style>",
+    """
+    <style>
+        div[data-baseweb='select'] {
+            margin: 0 auto;
+            width: 50%; /* Adjust the width as needed */
+        }
+    </style>
+    """,
     unsafe_allow_html=True
 )
 
-# Center the button
-st.markdown(
-    "<div style='text-align: center;'><button>Click me</button></div>",
-    unsafe_allow_html=True
-)
 
 # Placeholder for the selected figure
 if selected_value == 'Supervised Learning':
