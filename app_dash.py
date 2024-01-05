@@ -5,7 +5,7 @@ import pandas as pd
 
 # Creating a df to plot the Sentiment Analysis prediction
 review_data = {
-    'Airline': ['Ryanair', 'Airline_Tweets', 'Ryanair', 'Airline_Tweets', 'Ryanair', 'Airline_Tweets'],
+    'Airline': ['Ryanair', 'dvdf7b', 'Ryanair', 'dvdf7b', 'Ryanair', 'dvdf7b'],
     'Sentiment': ['Bad', 'Bad', 'Good', 'Good', 'Neutral', 'Neutral'],
     'Score': [3, 3, 3, 0, 2, 0]
 }
@@ -86,7 +86,8 @@ explained_variance_trn_enriched = [0.76860845, 0.16637195, 0.02241525]
 
 # Layout of the app
 st.title("Modern Transport Planning Ireland, LTD.")
-st.markdown("Summary of the ML results. Please select an option from the dropdown menu to visualize the results.")
+st.markdown("<p style='text-align: center;'>Summary of the ML results. Please select an option from the dropdown menu to visualize the results.</p>", unsafe_allow_html=True)
+
 
 # Dropdown for selecting the figure
 selected_value = st.selectbox("Select Figure", [
@@ -96,6 +97,18 @@ selected_value = st.selectbox("Select Figure", [
     'Unsupervised Learning PCA Variance',
     'Sentiment Analysis'
 ])
+
+# Apply custom styling to make the select box smaller
+st.markdown(
+    "<style>div[data-baseweb='select'] {max-width: 200px;}</style>",
+    unsafe_allow_html=True
+)
+
+# Center the button
+st.markdown(
+    "<div style='text-align: center;'><button>Click me</button></div>",
+    unsafe_allow_html=True
+)
 
 # Placeholder for the selected figure
 if selected_value == 'Supervised Learning':
@@ -108,9 +121,9 @@ elif selected_value == 'Sentiment Analysis':
     fig_sentiment.add_trace(go.Bar(x=review_crosstab.index, y=review_crosstab['Ryanair'],
                                    marker_color='blue', name='Ryanair'))
 
-    # Plot for Airline_Tweets
-    fig_sentiment.add_trace(go.Bar(x=review_crosstab.index, y=review_crosstab['Airline_Tweets'],
-                                   marker_color='orange', name='Airline_Tweets'))
+    # Plot for dvdf7b
+    fig_sentiment.add_trace(go.Bar(x=review_crosstab.index, y=review_crosstab['dvdf7b'],
+                                   marker_color='orange', name='dvdf7b'))
 
     fig_sentiment.update_layout(title='Sentiment Prediction Analysis',
                                 xaxis=dict(title='Sentiment'),
@@ -156,4 +169,5 @@ elif selected_value == 'Unsupervised Learning PCA Variance':
     st.plotly_chart(fig_pca_variance)
 
 # Additional tags
-st.markdown("Developed with ❤️ by Student sba23021.")
+st.markdown("<p style='text-align: center;'>Developed with ❤️ by Student sba23021.</p>", unsafe_allow_html=True)
+
