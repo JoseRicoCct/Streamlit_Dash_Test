@@ -5,7 +5,7 @@ import pandas as pd
 
 # Creating a df to plot the Sentiment Analysis prediction
 review_data = {
-    'Airline': ['Ryanair', 'dvdf7b', 'Ryanair', 'dvdf7b', 'Ryanair', 'dvdf7b'],
+    'Airline': ['Ryanair', 'USA_Airline_Tweets', 'Ryanair', 'USA_Airline_Tweets', 'Ryanair', 'USA_Airline_Tweets'],
     'Sentiment': ['Bad', 'Bad', 'Good', 'Good', 'Neutral', 'Neutral'],
     'Score': [3, 3, 3, 0, 2, 0]
 }
@@ -84,13 +84,25 @@ explained_variance_trn = [0.44371637, 0.33012741, 0.07419443]
 # Explained variances for TRN Enriched
 explained_variance_trn_enriched = [0.76860845, 0.16637195, 0.02241525]
 
+# Center the title
+st.markdown(
+    """
+    <style>
+        div[data-testid='stBlock'] {
+            text-align: center;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Layout of the app
-st.title("Modern Transport Planning Ireland, LTD.")
+st.title("Modern Transport Planning.ie , LTD.")
 st.markdown("<p style='text-align: center;'>Summary of the ML results. Please select an option from the dropdown menu to visualize the results.</p>", unsafe_allow_html=True)
 
 
 # Dropdown for selecting the figure
-selected_value = st.selectbox("Select Figure", [
+selected_value = st.selectbox("", [
     'Supervised Learning',
     'Cross Validation & Feature Reduction',
     'Unsupervised Learning Silhouette Score',
@@ -98,13 +110,16 @@ selected_value = st.selectbox("Select Figure", [
     'Sentiment Analysis'
 ], key="selectbox_key")
 
-# Center the dropdown
+# Center the dropdown and hide the label
 st.markdown(
     """
     <style>
         div[data-baseweb='select'] {
             margin: 0 auto;
             width: 50%; /* Adjust the width as needed */
+        }
+        label[data-baseweb='label'] {
+            display: none;
         }
     </style>
     """,
@@ -123,9 +138,9 @@ elif selected_value == 'Sentiment Analysis':
     fig_sentiment.add_trace(go.Bar(x=review_crosstab.index, y=review_crosstab['Ryanair'],
                                    marker_color='blue', name='Ryanair'))
 
-    # Plot for dvdf7b
-    fig_sentiment.add_trace(go.Bar(x=review_crosstab.index, y=review_crosstab['dvdf7b'],
-                                   marker_color='orange', name='dvdf7b'))
+    # Plot for USA_Airline_Tweets
+    fig_sentiment.add_trace(go.Bar(x=review_crosstab.index, y=review_crosstab['USA_Airline_Tweets'],
+                                   marker_color='orange', name='USA_Airline_Tweets'))
 
     fig_sentiment.update_layout(title='Sentiment Prediction Analysis',
                                 xaxis=dict(title='Sentiment'),
